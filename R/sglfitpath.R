@@ -21,6 +21,23 @@ sglfitpath <- function(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax,
 
         std <- standard2(x, isd, intr)
 
+        if (max(pf) < 0) {
+            stop("ERROR")
+        }
+
+        pf <- pmax(pf, 0)
+
+        if (ulam[1] == -1) {
+            maxlam <- maxlambda(nvars, nobs, std$x, y, gamma, gindex, ngroups, pf)
+
+            ulam <- numeric(nlam)
+            ulam[1] <- maxlam
+            for (j in 2:nlam) {
+                tmp <- log(maxlam) + (log(maxlam * flmin) - log(maxlam)) * (j - 1) / (nlam - 1)
+                ulam[j] <- exp(tmp)
+            }
+        }
+
         fit <- .Fortran("sglfitF", as.double(gamma), as.integer(ngroups), as.integer(gindex),
                         as.integer(nobs), as.integer(nvars), as.matrix(std$x), y, pf, dfmax, pmax, nlam, flmin, ulam,
                         eps, as.double(peps), intr, maxit, nalam = integer(1), b0 = double(nlam),

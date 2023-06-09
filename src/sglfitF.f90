@@ -10,29 +10,13 @@ SUBROUTINE sglfitF(gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax, pmax, &
   INTEGER :: nobs, nvars, dfmax, pmax, nlam, nalam, intr, ngroups
   INTEGER :: npass, jerr, maxit, gindex(ngroups)
   INTEGER :: ibeta(pmax), nbeta(nlam), ju(nvars)
-  DOUBLE PRECISION :: flmin, eps, peps, gamma, maxlam
+  DOUBLE PRECISION :: flmin, eps, peps, gamma
   DOUBLE PRECISION :: x(nobs, nvars), y(nobs)
   DOUBLE PRECISION :: pf(nvars)
   DOUBLE PRECISION :: beta(pmax, nlam), b0(nlam), maj(nvars)
-  DOUBLE PRECISION :: ulam(nlam), alam(nlam), tmp
-  ! -------- LOCAL DECLARATIONS -------- !
-  INTEGER :: j
+  DOUBLE PRECISION :: ulam(nlam), alam(nlam)
   ! -------- ALLOCATE VARIABLES -------- !
   IF (jerr /= 0) RETURN
-  IF (MAXVAL(pf) <= 0.0D0) THEN
-    jerr = 10000
-    RETURN
-  END IF
-  pf = MAX(0.0D0, pf)
-  ! -------------------- COMPUTE LAMBDA --------------------- !
-  IF (ulam(1) .EQ. -1.0D0) THEN
-    CALL maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
-    ulam(1) = maxlam
-    DO j = 2, nlam
-        tmp = LOG(maxlam) + (LOG(maxlam*flmin) - LOG(maxlam)) * (j - 1) / (nlam - 1)
-        ulam(j) = EXP(tmp)
-    END DO
-  END IF
 
   IF (gamma == 1.0D0) THEN
     ! -------------------- CALL lassofitpathF --------------------- !
