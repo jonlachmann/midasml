@@ -258,7 +258,7 @@ SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax, &
     DOUBLE PRECISION :: ulam(nlam), alam(nlam)
     ! -------- LOCAL DECLARATIONS -------- !
     INTEGER,  PARAMETER :: mnlam = 6
-    DOUBLE PRECISION :: tmp, d, dif, oldb, u, v, al, flmin
+    DOUBLE PRECISION :: d, dif, oldb, al, flmin
     DOUBLE PRECISION,  DIMENSION(:),  ALLOCATABLE :: b, oldbeta, r
 
     INTEGER :: k, j, l, vrg, ctr, ierr, ni, me, pln
@@ -298,22 +298,7 @@ SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax, &
                 pln = pln + 1
                 DO k = 1, nvars
                     IF (pln == 1) THEN
-                        oldb = b(k)
-                        DO ! BEGIN PROXIMAL COORDINATE DESCENT
-                            !u = 0.0D0
-                            u = maj(k) * b(k) + DOT_PRODUCT(r,x(:,k))/nobs
-                            v = ABS(u) - al * pf(k)
-                            IF (v > 0.0D0) THEN
-                                tmp = SIGN(v,u)/maj(k)
-                            ELSE
-                                tmp = 0.0D0
-                            END IF
-                            d = tmp - b(k)
-                            IF (d**2 < eps) EXIT
-                            b(k) = tmp
-                            r = r - x(:,k) * d
-                        END DO ! END PROXIMAL GRADIENT DESCENT
-                        d = b(k) - oldb
+                        CALL test(b, k, r, x, nobs, al, pf, nvars, eps, maj, d)
                         IF (ABS(d) > 0.0D0) THEN
                             dif = dif + maj(k) * d**2
                             IF (mm(k) == 0) THEN
@@ -326,23 +311,7 @@ SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax, &
                         IF (ABS(b(k))>0.0D0) ju(k) = 1
                     ELSE
                             IF (ju(k) == 1) THEN
-                                oldb = b(k)
-                                DO ! BEGIN PROXIMAL GRADIENT DESCENT
-                                    !u = 0.0D0
-                                    u = DOT_PRODUCT(r,x(:,k))
-                                    u = maj(k) * b(k) + u/nobs
-                                    v = ABS(u) - al * pf(k)
-                                    IF (v > 0.0D0) THEN
-                                        tmp = SIGN(v,u)/maj(k)
-                                    ELSE
-                                        tmp = 0.0D0
-                                    END IF
-                                    d = tmp - b(k)
-                                    IF (d**2 < eps) EXIT
-                                    b(k) = tmp
-                                    r = r - x(:,k) * d
-                                END DO ! END PROXIMAL GRADIENT DESCENT
-                                d = b(k) - oldb
+                                CALL test(b, k, r, x, nobs, al, pf, nvars, eps, maj, d)
                                 IF (ABS(d) > 0.0D0) THEN
                                         dif = MAX(dif, maj(k) * d**2)
                                 END IF
@@ -402,7 +371,30 @@ SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax, &
 END SUBROUTINE lassofitpathF
 
 
+SUBROUTINE test(b, k, r, x, nobs, al, pf, nvars, eps, maj, d)
+    INTEGER :: k, nobs
+    DOUBLE PRECISION :: d, oldb, u, al, tmp, eps, v
+    DOUBLE PRECISION :: b(nvars + 1), r(nobs), maj(nvars)
+    DOUBLE PRECISION :: pf(nvars), x(nobs, nvars)
+    oldb = b(k)
+    DO ! BEGIN PROXIMAL GRADIENT DESCENT
+        !u = 0.0D0
+        u = maj(k) * b(k) + DOT_PRODUCT(r,x(:,k))/nobs
+        v = ABS(u) - al * pf(k)
+        IF (v > 0.0D0) THEN
+            tmp = SIGN(v,u)/maj(k)
+        ELSE
+            tmp = 0.0D0
+        END IF
+        d = tmp - b(k)
+        IF (d**2 < eps) EXIT
+        b(k) = tmp
+        r = r - x(:,k) * d
+    END DO ! END PROXIMAL GRADIENT DESCENT
+    d = b(k) - oldb
+END SUBROUTINE test
 
+! -- MODIFIED: r, b
 SUBROUTINE prox_sgl(gstart, gend, nvars, nobs, x, r, b, al, gamma, pf, peps, gw, step)
 
     IMPLICIT NONE
