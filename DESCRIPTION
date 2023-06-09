@@ -17,3 +17,4 @@ License: GPL (>= 2)
 Depends: Matrix, R (>= 3.5.0)
 Imports: doRNG, doParallel, foreach, graphics, randtoolbox, snow, methods, lubridate, stats	
 Encoding: UTF-8
+Config/testthat/edition: 3

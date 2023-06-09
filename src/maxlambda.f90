@@ -78,10 +78,11 @@ SUBROUTINE  solvewmaxg(gstart, gend, gamma, lb, rb, gw, pf, xy, nvars)
     INTEGER :: gstart, gend, nvars
     DOUBLE PRECISION :: gamma, lb, rb, gw, pf(nvars), xy(nvars)
     ! -------- LOCAL DECLARATIONS -------- !
-    INTEGER :: stopflag, indexi
+    INTEGER :: stopflag, indexi, iters
     DOUBLE PRECISION ::  tol = 1E-13, mp, fl, fm, fr, tmpl, tmpm, tmpr
 
     stopflag = 0
+    iters = 0
     DO
         mp = 0.5 * (lb + rb)
         fl = 0.0D0
@@ -125,6 +126,8 @@ SUBROUTINE  solvewmaxg(gstart, gend, gamma, lb, rb, gw, pf, xy, nvars)
             END IF
         END IF
        IF (stopflag .EQ. 1) EXIT
+       IF (iters > 1000) EXIT
+       iters = iters + 1
     END DO
     rb = mp
 
