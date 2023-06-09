@@ -2,41 +2,28 @@
 ! sglfitF.f90: block coordinate descent for sg-LASSO MSE regression.
 ! ------------------------------------------------------------------
 SUBROUTINE sglfitF(gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax, pmax, &
-& nlam, flmin, ulam, eps, peps, isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, &
-& alam, npass, jerr)
+& nlam, flmin, ulam, eps, peps, intr, maxit, nalam, b0, beta, ibeta, nbeta, &
+& alam, npass, jerr, ju, maj)
 
   IMPLICIT NONE
   ! -------- INPUT VARIABLES -------- !
-  INTEGER :: nobs, nvars, dfmax, pmax, nlam, nalam, isd, intr, ngroups
+  INTEGER :: nobs, nvars, dfmax, pmax, nlam, nalam, intr, ngroups
   INTEGER :: npass, jerr, maxit, gindex(ngroups)
-  INTEGER :: ibeta(pmax), nbeta(nlam)
+  INTEGER :: ibeta(pmax), nbeta(nlam), ju(nvars)
   DOUBLE PRECISION :: flmin, eps, peps, gamma, maxlam
   DOUBLE PRECISION :: x(nobs, nvars), y(nobs)
   DOUBLE PRECISION :: pf(nvars)
-  DOUBLE PRECISION :: beta(pmax, nlam), b0(nlam)
+  DOUBLE PRECISION :: beta(pmax, nlam), b0(nlam), maj(nvars)
   DOUBLE PRECISION :: ulam(nlam), alam(nlam), tmp
   ! -------- LOCAL DECLARATIONS -------- !
-  INTEGER :: j, l, nk, ierr
-  INTEGER, DIMENSION(:), ALLOCATABLE :: ju
-  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: xmean, xnorm, maj
+  INTEGER :: j
   ! -------- ALLOCATE VARIABLES -------- !
-  ALLOCATE(ju(1:nvars), STAT=ierr)
-  jerr = jerr + ierr
-  ALLOCATE(xmean(1:nvars), STAT=ierr)
-  jerr = jerr + ierr
-  ALLOCATE(xnorm(1:nvars), STAT=ierr)
-  jerr = jerr + ierr
-  ALLOCATE(maj(1:nvars), STAT=ierr)
-  jerr = jerr + ierr
   IF (jerr /= 0) RETURN
-  CALL chkvars(nobs, nvars, x, ju)
   IF (MAXVAL(pf) <= 0.0D0) THEN
     jerr = 10000
     RETURN
   END IF
   pf = MAX(0.0D0, pf)
-  ! -------------------- STANDARDIZE & COMPUTE MAJ --------------------- !
-  CALL standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
   ! -------------------- COMPUTE LAMBDA --------------------- !
   IF (ulam(1) .EQ. -1.0D0) THEN
     CALL maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
@@ -59,19 +46,6 @@ SUBROUTINE sglfitF(gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax, pmax, &
       & nbeta, alam, npass, jerr, intr)
   END IF
   IF (jerr > 0) RETURN ! CHECK ERROR AFTER CALLING FUNCTION
-  ! ----------- TRANSFORM BETA BACK TO THE ORIGINAL SCALE ----------- !
-  DO l = 1, nalam
-    nk = nbeta(l)
-    IF (isd == 1) THEN
-      DO j = 1, nk
-        beta(j,l) = beta(j,l)/xnorm(ibeta(j))
-      END DO
-    END IF
-    IF (intr == 1) THEN
-        b0(l) = b0(l) - DOT_PRODUCT(beta(1:nk,l),xmean(ibeta(1:nk)))
-    END IF
-  END DO
-  DEALLOCATE(ju,xmean,xnorm,maj)
   RETURN
 END SUBROUTINE sglfitF
 

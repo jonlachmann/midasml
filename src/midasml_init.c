@@ -4,12 +4,12 @@
 
 
 extern void F77_NAME(panelsglfitf)(int *nf, int *T, double *gamma, int *ngroups, int *gindex, int *nobs, int *nvars, double *x, double *y, double *pf, int *dfmax, int *pmax, int *nlam, double *flmin, double *ulam, double *eps, double *peps, int *isd, int *intr, int *maxit, int *nalam, double *b0, double *a0, double *beta, int *ibeta, int *nbeta, double *alam, int *npass, int *jerr);
-extern void F77_NAME(sglfitf)(double *gamma, int *ngroups, int *gindex, int *nobs, int *nvars, double *x, double *y, double *pf, int *dfmax, int *pmax, int *nlam, double *flmin, double *ulam, double *eps, double *peps, int *isd, int *intr, int *maxit, int *nalam, double *b0, double *beta, int *ibeta, int *nbeta, double *alam, int *npass, int *jerr);
+extern void F77_NAME(sglfitf)(double *gamma, int *ngroups, int *gindex, int *nobs, int *nvars, double *x, double *y, double *pf, int *dfmax, int *pmax, int *nlam, double *flmin, double *ulam, double *eps, double *peps, int *intr, int *maxit, int *nalam, double *b0, double *beta, int *ibeta, int *nbeta, double *alam, int *npass, int *jerr, int *ju, double *maj);
 extern void F77_NAME(standard)(int *nobs, int *nvars, double *x, int *ju, int *isd, int *intr, double *xmean, double *xnorm, int *maj);
 
 static const R_FortranMethodDef FortranEntries[] = {
   {"panelsglfitf", (DL_FUNC) &F77_NAME(panelsglfitf), 29},
-  {"sglfitf",      (DL_FUNC) &F77_NAME(sglfitf),      26},
+  {"sglfitf",      (DL_FUNC) &F77_NAME(sglfitf),      27},
   {"standard",      (DL_FUNC) &F77_NAME(standard),     9},
   {NULL, NULL, 0}
 };
