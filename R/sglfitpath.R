@@ -45,9 +45,8 @@ sglfitpath <- function(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax,
                         alam = double(nlam), npass = integer(1), jerr = integer(1), ju = as.integer(ju), maj = as.double(std$maj),
                         PACKAGE = "midasml")
 
-        fit <- sglfitpath_alg(std$maj, gamma, ngroups, gindex, nobs, nvars, std$x, y, ju, pf, dfmax,
-                    pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, nlam, beta, m, nlam, nlam,
-                    npass, jerr, intr)
+        fit <- sglfitpath_alg(std$maj, gamma, ngroups, gindex, nobs, nvars, std$x, y, pf, dfmax,
+                    pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, nlam, beta, nlam, nlam, intr)
 
         xmean <- attr(std$x, "scaled:center")
         xnorm <- attr(std$x, "scaled:scale")
