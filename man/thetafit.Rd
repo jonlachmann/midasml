@@ -2,7 +2,7 @@
 % Please edit documentation in R/thetafit.R
 \name{thetafit}
 \alias{thetafit}
-\title{Nodewise LASSO regressions to fit the precision matrix \ifelse{html}{\out{&Theta;}}{\eqn{\Theta}}.}
+\title{Nodewise LASSO regressions to fit the precision matrix \ifelse{html}{\out{&Theta;}}{\eqn{\Theta}}}
 \usage{
 thetafit(x, parallel = FALSE, ncores = getOption("mc.cores", NULL), 
          intercept = FALSE, K = 20, l = 5, seed = NULL, verbose = FALSE, 
@@ -39,11 +39,9 @@ Fits the precision matrix \ifelse{html}{\out{&Theta;}}{\eqn{\Theta}} by running 
 The function runs \link{tscv.sglfit} \code{p} times by regressing \code{j}-th covariate on all other covariates excluding \code{j}-th covariate. The precision matrix is then constructed based on LASSO estimates. Each nodewise LASSO regression tuning parameter \ifelse{html}{\out{&lambda;}}{\eqn{\lambda}} is optimized using time series cross-validation. See \link{tscv.sglfit} for more details on cross-validation implementation.
 }
 \examples{
-\donttest{ 
 set.seed(1)
 x = matrix(rnorm(100 * 20), 100, 20)
 thetafit(x = x, parallel = FALSE)
-}
 }
 \author{
 Jonas Striaukas

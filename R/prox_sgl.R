@@ -1,4 +1,4 @@
-prox_sgl <- function (nobs, x, r, b, al, gamma, pf, peps, gw, step) {
+prox_sgl2 <- function (nobs, x, r, b, al, gamma, pf, peps, gw, step) {
     big <- 9.9E30
     s <- step
     vg_const <- s * gw * al * (1 - gamma)
