@@ -1,4 +1,4 @@
-! --------------------------------- sglfitpathF --------------------------------- !
+# ! --------------------------------- sglfitpathF --------------------------------- !
 sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, pf, dfmax,
  pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, b0, beta, m, nbeta, alam,
  npass, jerr, intr) {
@@ -14,6 +14,8 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
   #DOUBLE PRECISION :: ulam(nlam), alam(nlam)
   #! -------- LOCAL DECLARATIONS -------- !
   #INTEGER,  PARAMETER :: mnlam = 6
+  mnlam <- 6
+  steps <- numeric(ngroups)
   #DOUBLE PRECISION :: d, dif, oldb, u, al, flmin
   #DOUBLE PRECISION,  DIMENSION(:), ALLOCATABLE :: b, oldbeta, r
   #DOUBLE PRECISION :: gw, tmp
@@ -31,14 +33,15 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
   #jerr = jerr + ierr
   #if (jerr /= 0) RETURN
   #! ---------------- INITIALIZATION ---------------- !
-  b <- 0
-  oldbeta <- 0
-  m <- 0
-  mm <- 0
+  b <- numeric(nvars + 1)
+  oldbeta <- numeric(nvars + 1)
+  beta <- matrix(0, pmax, nlam)
+  m <- numeric(pmax)
+  mm <- numeric(nvars)
   npass <- 0
   ni <- npass
   mnl <- min(mnlam, nlam)
-  ju <- 0
+  ju <- numeric(nvars)
   r <- y
   for (k in seq_len(ngroups)) {
     gend <- gindex[k]
@@ -58,14 +61,14 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
         pln <- 0
         # ! ------------------ OUTER LOOP -------------------- !
         while (TRUE) {
-            if (intr == 1) oldbeta[0] <- b[0]
-            if (ni > 0) oldbeta[m[1:ni]] <- b[m[1:ni]]
+            if (intr == 1) oldbeta[1] <- b[1]
+            if (ni > 0) oldbeta[m[1:ni] + 1] <- b[m[1:ni] + 1]
             # ! ----------------- MIDDLE LOOP -------------------- !
             while (TRUE) {
                 npass <- npass + 1
                 dif <- 0
-                if (intr == 1) oldbeta[0] <- b[0]
-                if (ni > 0) oldbeta[m[1:ni]] <- b[m[1:ni]]
+                if (intr == 1) oldbeta[1] <- b[1]
+                if (ni > 0) oldbeta[m[1:ni] + 1] <- b[m[1:ni] + 1]
                 pln <- pln + 1
                 # ! ----------------- GROUP LOOP -------------------- !
                 for (k in seq_len(ngroups)) {
@@ -90,15 +93,17 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
                     }
                     if (skip == 0) {
                         # ! --- sg-LASSO PROXIMAL MAP --- !
-                        ## TODO: CALL prox_sgl(gstart, gend, nvars, nobs, x, r, b(1:nvars), al, gamma, pf, peps, gw, steps(k))
+                        prox_res <- prox_sgl(gstart, gend, nvars, nobs, x, r, b[1:nvars + 1], al, gamma, pf, peps, gw, steps[k])
+                        r <- prox_res$r
+                        b[1:nvars + 1] <- prox_res$b
                         # ! UPDATE REMAINING VARIABLES
                         for (g in gstart:gend) {
                             # !if (abs(b(g))<eps) b(g) = 0
-                            if (abs(b[g]) > 0) {
+                            if (abs(b[g + 1]) > 0) {
                                 if (pln == 1) {
                                     ju[k] <- 1
                                 }
-                                d <- oldbeta[g] - b[g]
+                                d <- oldbeta[g + 1] - b[g + 1]
                                 dif <- max(dif, maj[g] * d^2)
                                 if (mm[g] == 0) {
                                     ni <- ni + 1
@@ -112,15 +117,15 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
                 }# ! ----------> END GROUP LOOP
                 if (ni > pmax) break
                 if (intr == 1) {
-                    oldb <- oldbeta[0]
+                    oldb <- oldbeta[1]
                     u <- 0
                     while (TRUE) { #! BEGIN GRADIENT DESCENT
                       d <- sum(r) / nobs
                       if (d^2 < eps) break
-                      b[0] <- b[0] + d
+                      b[1] <- b[1] + d
                       r <- r - d
                     }# ! END GRADIENT DESCENT
-                    d <- b[0] - oldb
+                    d <- b[1] - oldb
                     if (abs(d) > 0) dif <- max(dif, d^2)
                 }
                 if (dif < eps) break
@@ -129,10 +134,10 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
             # ! -------------- FINAL CHECK ---------------- !
             vrg <- 1
             if (intr == 1) {
-            if ((b[0] - oldbeta[0])^2 >= eps) vrg <- 0
+            if ((b[1] - oldbeta[1])^2 >= eps) vrg <- 0
             }
             for (j in seq_len(ni)) {
-                if ((b[m[j]] - oldbeta[m[j]])^2 >= eps) {
+                if ((b[m[j] + 1] - oldbeta[m[j] + 1])^2 >= eps) {
                     vrg <- 0
                     break
                 }
@@ -149,9 +154,9 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
          jerr <- - 10000 - l
          break
         }
-        if (ni > 0) beta[1:ni, l] <- b[m[1:ni]]
+        if (ni > 0) beta[1:ni, l] <- b[m[1:ni] + 1]
         nbeta[l] <- ni
-        b0[l] <- b(0)
+        b0[l] <- b[1]
         alam[l] <- al
         nalam <- l
         if (l < mnl) next
@@ -160,5 +165,14 @@ sglfitpath_alg <- function (maj, gamma, ngroups, gindex, nobs, nvars, x, y, ju, 
         if (me > dfmax) break
   }# ! -------> END LAMBDA LOOP
 
-  return()
+  return(list(
+    alam = alam,
+    beta = beta,
+    b0 = b0,
+    nalam = nalam,
+    nbeta = nbeta,
+    ibeta = m,
+    jerr = 0,
+    npass = npass
+  ))
 }

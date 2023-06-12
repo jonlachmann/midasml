@@ -38,12 +38,16 @@ sglfitpath <- function(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax,
             }
         }
 
-        fit <- .Fortran("sglfitF", as.double(gamma), as.integer(ngroups), as.integer(gindex),
+        fit2 <- .Fortran("sglfitF", as.double(gamma), as.integer(ngroups), as.integer(gindex),
                         as.integer(nobs), as.integer(nvars), as.matrix(std$x), y, pf, dfmax, pmax, nlam, flmin, ulam,
                         eps, as.double(peps), intr, maxit, nalam = integer(1), b0 = double(nlam),
                         beta = double(pmax * nlam), ibeta = integer(pmax), nbeta = integer(nlam), 
                         alam = double(nlam), npass = integer(1), jerr = integer(1), ju = as.integer(ju), maj = as.double(std$maj),
                         PACKAGE = "midasml")
+
+        fit <- sglfitpath_alg(std$maj, gamma, ngroups, gindex, nobs, nvars, std$x, y, ju, pf, dfmax,
+                    pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, nlam, beta, m, nlam, nlam,
+                    npass, jerr, intr)
 
         xmean <- attr(std$x, "scaled:center")
         xnorm <- attr(std$x, "scaled:scale")
