@@ -3,7 +3,7 @@ sglfitpath_alg <- function(
     maj, gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
     pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, b0, beta, nbeta, alam, intr) {
   mnlam <- 6
-  steps <- numeric(ngroups)
+  steps <- stepSize(x, gindex, ngroups, nobs)
   b <- numeric(nvars + 1)
   oldbeta <- numeric(nvars + 1)
   beta <- matrix(0, pmax, nlam)
@@ -14,16 +14,6 @@ sglfitpath_alg <- function(
   mnl <- min(mnlam, nlam)
   ju <- numeric(nvars)
   r <- y
-  for (k in seq_len(ngroups)) {
-    gend <- gindex[k]
-    if (k == 1) {
-      gstart <- 1
-    } else {
-      gstart <- gindex[k - 1] + 1
-    }
-    tmp <- sum((t(x[, gstart:gend]) %*% x[, gstart:gend]) / nobs * (t(x[, gstart:gend]) %*% x[, gstart:gend]) / nobs)
-    steps[k] <- 1 / sqrt(tmp)
-  }
 
   # ! ----------------- LAMBDA LOOP (OUTMOST LOOP) ------------------- !
   for (l in seq_len(nlam)) {
@@ -142,4 +132,19 @@ sglfitpath_alg <- function(
     jerr = 0,
     npass = npass
   ))
+}
+
+stepSize <- function (x, gindex, ngroups, nobs) {
+  steps <- numeric(ngroups)
+  for (k in seq_len(ngroups)) {
+    gend <- gindex[k]
+    if (k == 1) {
+      gstart <- 1
+    } else {
+      gstart <- gindex[k - 1] + 1
+    }
+    xtx <- t(x[, gstart:gend]) %*% x[, gstart:gend]
+    steps[k] <- 1 / sqrt(sum(xtx / nobs * xtx / nobs))
+  }
+  return(steps)
 }

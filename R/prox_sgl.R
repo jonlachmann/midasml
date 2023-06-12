@@ -2,7 +2,9 @@ prox_sgl <- function (gstart, gend, nvars, nobs, x, r, b, al, gamma, pf, peps, g
     big <- 9.9E30
     bold <- numeric(nvars)
     s <- step
+    vg_const <- s * gw * al * (1 - gamma)
     #! -------- BEGIN PROGRAM -------- #!
+    aaa <- 1
     while (TRUE) {
         bold[gstart:gend] <- b[gstart:gend]
         #!--------- LASSO PART ----------#!
@@ -19,25 +21,27 @@ prox_sgl <- function (gstart, gend, nvars, nobs, x, r, b, al, gamma, pf, peps, g
         #!--------- g-LASSO PART ----------#!
         #! L2 norm of b_g
         normg <- sqrt(sum(b[gstart:gend] * b[gstart:gend]))
+        if (normg != 0) {
+            vg <- vg_const / normg
+        } else {
+            vg <- big
+        }
         #! Initialize storage vars
-        maxg <- 0
-        vg <- s * gw * al * (1 - gamma) / normg
+
         if (normg == 0) {
             vg <- big
         }
 
-        for (g in gstart:gend) {
-            scl <- 1 - pf[g] * vg
-            scl <- max(scl, 0)
-            #!l_2,1 norm map
-            tmp <- scl * b[g]
-            d <- tmp - bold[g]
-            r <- r - x[,g] * d
-            maxg <- max(maxg, abs(d))
-            b[g] <- tmp
-        }
+        scl <- pmax(1 - pf[gstart:gend] * vg, 0)
+        b[gstart:gend] <- b[gstart:gend] * scl
+        d <- b[gstart:gend] - bold[gstart:gend]
+        r <- r - x[, gstart:gend] %*% d
+        maxg <- max(abs(d))
+
         #!--------- CHECK CONVERGENCE ----------#!
         if (maxg < peps) break
+        aaa <- aaa + 1
     }
+    cat("\n", aaa)
   return(list(b = b, r = r))
 }
