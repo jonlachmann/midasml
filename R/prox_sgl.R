@@ -1,40 +1,29 @@
-prox_sgl <- function (gstart, gend, nvars, nobs, x, r, b, al, gamma, pf, peps, gw, step) {
+prox_sgl <- function (gstart, gend, nobs, x, r, b, al, gamma, pf, peps, gw, step) {
     big <- 9.9E30
-    bold <- numeric(nvars)
     s <- step
     vg_const <- s * gw * al * (1 - gamma)
     #! -------- BEGIN PROGRAM -------- #!
     aaa <- 1
     while (TRUE) {
-        bold[gstart:gend] <- b[gstart:gend]
+        bold <- b
         #!--------- LASSO PART ----------#!
-        for (g in gstart:gend) {
-            u <- b[g] + s * sum(x[, g] * r) / nobs
-            v <- abs(u) - s * al * gamma * pf[g]
-            if (v > 0) {
-                tmp <- v * sign(u)
-            } else {
-                tmp <- 0
-            }
-            b[g] <- tmp
-        }
+        u <- b + s * t(x[, gstart:gend, drop = FALSE]) %*% r / nobs
+        v <- abs(u) - s * al * gamma * pf[gstart:gend]
+        v <- pmax2(v, 0)
+        b <- v * sign(u)
+
         #!--------- g-LASSO PART ----------#!
         #! L2 norm of b_g
-        normg <- sqrt(sum(b[gstart:gend] * b[gstart:gend]))
+        normg <- sqrt(sum(b * b))
         if (normg != 0) {
             vg <- vg_const / normg
         } else {
             vg <- big
         }
-        #! Initialize storage vars
 
-        if (normg == 0) {
-            vg <- big
-        }
-
-        scl <- pmax(1 - pf[gstart:gend] * vg, 0)
-        b[gstart:gend] <- b[gstart:gend] * scl
-        d <- b[gstart:gend] - bold[gstart:gend]
+        scl <- pmax2(1 - pf[gstart:gend] * vg, 0)
+        b <- b * scl
+        d <- b - bold
         r <- r - x[, gstart:gend] %*% d
         maxg <- max(abs(d))
 
@@ -45,3 +34,5 @@ prox_sgl <- function (gstart, gend, nvars, nobs, x, r, b, al, gamma, pf, peps, g
     cat("\n", aaa)
   return(list(b = b, r = r))
 }
+
+pmax2 <- function(k,x) (x+k + abs(x-k))/2
