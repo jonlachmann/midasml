@@ -53,7 +53,7 @@ sglfitpath_alg <- function(
           }
           if (skip == 0) {
             # ! --- sg-LASSO PROXIMAL MAP --- !
-            prox_res <- prox_sgl(gstart, gend, nobs, x, r, b[gstart:gend + 1], al, gamma, pf, peps, gw, steps[k])
+            prox_res <- prox_sgl(nobs, x[, gstart:gend, drop = FALSE], r, b[gstart:gend + 1], al, gamma, pf[gstart:gend], peps, gw, steps[k])
             r <- prox_res$r
             b[gstart:gend + 1] <- prox_res$b
             # ! UPDATE REMAINING VARIABLES

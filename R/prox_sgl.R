@@ -1,4 +1,4 @@
-prox_sgl <- function (gstart, gend, nobs, x, r, b, al, gamma, pf, peps, gw, step) {
+prox_sgl <- function (nobs, x, r, b, al, gamma, pf, peps, gw, step) {
     big <- 9.9E30
     s <- step
     vg_const <- s * gw * al * (1 - gamma)
@@ -7,8 +7,8 @@ prox_sgl <- function (gstart, gend, nobs, x, r, b, al, gamma, pf, peps, gw, step
     while (TRUE) {
         bold <- b
         #!--------- LASSO PART ----------#!
-        u <- b + s * t(x[, gstart:gend, drop = FALSE]) %*% r / nobs
-        v <- abs(u) - s * al * gamma * pf[gstart:gend]
+        u <- b + s * t(x) %*% r / nobs
+        v <- abs(u) - s * al * gamma * pf
         v <- pmax2(v, 0)
         b <- v * sign(u)
 
@@ -21,10 +21,10 @@ prox_sgl <- function (gstart, gend, nobs, x, r, b, al, gamma, pf, peps, gw, step
             vg <- big
         }
 
-        scl <- pmax2(1 - pf[gstart:gend] * vg, 0)
+        scl <- pmax2(1 - pf * vg, 0)
         b <- b * scl
         d <- b - bold
-        r <- r - x[, gstart:gend] %*% d
+        r <- r - x %*% d
         maxg <- max(abs(d))
 
         #!--------- CHECK CONVERGENCE ----------#!
