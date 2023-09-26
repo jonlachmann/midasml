@@ -1,9 +1,9 @@
 # ! --------------------------------- sglfitpathF --------------------------------- !
 sglfitpath_alg <- function(
     maj, gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
-    pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, b0, beta, nbeta, alam, intr) {
+    pmax, nlam, flmin, ulam, eps, peps, maxit, nalam, b0, beta, nbeta, alam, intr
+) {
   mnlam <- 6
-  steps <- stepSize(x, gindex, ngroups, nobs)
   b <- numeric(nvars + 1)
   oldbeta <- numeric(nvars + 1)
   beta <- matrix(0, pmax, nlam)
@@ -14,6 +14,11 @@ sglfitpath_alg <- function(
   mnl <- min(mnlam, nlam)
   ju <- numeric(nvars)
   r <- y
+
+  groups <- groupIdxs(gindex, ngroups)
+  x_groups <- lapply(groups, function (g) x[, g, drop = FALSE])
+  pf_groups <- lapply(groups, function (g) pf[g])
+  steps <- stepSize(x, groups, nobs)
 
   # ! ----------------- LAMBDA LOOP (OUTMOST LOOP) ------------------- !
   for (l in seq_len(nlam)) {
@@ -33,17 +38,8 @@ sglfitpath_alg <- function(
         pln <- pln + 1
         # ! ----------------- GROUP LOOP -------------------- !
         for (k in seq_len(ngroups)) {
-          gend <- gindex[k]
-          if (k == 1) {
-            gstart <- 1
-          } else {
-            gstart <- gindex[k - 1] + 1
-          }
-          gw <- 0
-          for (gj in gstart:gend) {
-            gw <- gw + pf[gj]
-          }
-          gw <- sqrt(gw)
+          gidxs <- groups[[k]]
+          gw <- sqrt(sum(pf_groups[[k]]))
           skip <- 1
           if (pln == 1) {
             skip <- 0
@@ -53,11 +49,11 @@ sglfitpath_alg <- function(
           }
           if (skip == 0) {
             # ! --- sg-LASSO PROXIMAL MAP --- !
-            prox_res <- prox_sgl(nobs, x[, gstart:gend, drop = FALSE], r, b[gstart:gend + 1], al, gamma, pf[gstart:gend], peps, gw, steps[k])
+            prox_res <- prox_sgl(nobs, x_groups[[k]], r, b[gidxs + 1], al, gamma, pf_groups[[k]], peps, gw, steps[k])
             r <- prox_res$r
-            b[gstart:gend + 1] <- prox_res$b
+            b[gidxs + 1] <- prox_res$b
             # ! UPDATE REMAINING VARIABLES
-            for (g in gstart:gend) {
+            for (g in gidxs) {
               if (abs(b[g + 1]) > 0) {
                 if (pln == 1) {
                   ju[k] <- 1
@@ -134,8 +130,17 @@ sglfitpath_alg <- function(
   ))
 }
 
-stepSize <- function (x, gindex, ngroups, nobs) {
-  steps <- numeric(ngroups)
+stepSize <- function (x, groups, nobs) {
+  steps <- numeric()
+  for (group in groups) {
+    xtx <- t(x[, group]) %*% x[, group]
+    steps <- c(steps, 1 / sqrt(sum(xtx / nobs * xtx / nobs)))
+  }
+  return(steps)
+}
+
+groupIdxs <- function (gindex, ngroups) {
+  idxs <- list()
   for (k in seq_len(ngroups)) {
     gend <- gindex[k]
     if (k == 1) {
@@ -143,8 +148,7 @@ stepSize <- function (x, gindex, ngroups, nobs) {
     } else {
       gstart <- gindex[k - 1] + 1
     }
-    xtx <- t(x[, gstart:gend]) %*% x[, gstart:gend]
-    steps[k] <- 1 / sqrt(sum(xtx / nobs * xtx / nobs))
+    idxs[[k]] <- gstart:gend
   }
-  return(steps)
+  return(idxs)
 }

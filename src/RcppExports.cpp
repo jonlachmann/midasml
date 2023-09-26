@@ -12,14 +12,14 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // prox_sgl
-Rcpp::List prox_sgl(int nobs, Eigen::MatrixXd x, Eigen::VectorXd r, Eigen::VectorXd b, double al, double gamma, Eigen::VectorXd pf, double peps, double gw, double step);
+Rcpp::List prox_sgl(int nobs, Eigen::MatrixXd& x, Eigen::VectorXd& r, Eigen::VectorXd b, double al, double gamma, Eigen::VectorXd pf, double peps, double gw, double step);
 RcppExport SEXP _midasml_prox_sgl(SEXP nobsSEXP, SEXP xSEXP, SEXP rSEXP, SEXP bSEXP, SEXP alSEXP, SEXP gammaSEXP, SEXP pfSEXP, SEXP pepsSEXP, SEXP gwSEXP, SEXP stepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type nobs(nobsSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type r(rSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd& >::type r(rSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXd >::type b(bSEXP);
     Rcpp::traits::input_parameter< double >::type al(alSEXP);
     Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);

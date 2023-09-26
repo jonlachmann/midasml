@@ -1,14 +1,12 @@
 #include <RcppEigen.h>
-#include <queue>
-#include <random>
 // [[Rcpp::depends(RcppEigen)]]
 
 //' @export
 // [[Rcpp::export]]
 Rcpp::List prox_sgl(
     int nobs,
-    Eigen::MatrixXd x,
-    Eigen::VectorXd r,
+    Eigen::MatrixXd &x,
+    Eigen::VectorXd &r,
     Eigen::VectorXd b,
     double al,
     double gamma,
@@ -17,16 +15,18 @@ Rcpp::List prox_sgl(
     double gw,
     double step
     ) {
-
     Eigen::VectorXd bold = b;
+    Eigen::VectorXd u = b;
+    Eigen::VectorXd v = b;
+    int iters = 0;
     double big = 9.9E30;
     double vg_const = step * gw * al * (1 - gamma);
     //#! -------- BEGIN PROGRAM -------- #!
     while (true) {
         bold = b;
         //#!--------- LASSO PART ----------#!
-        Eigen::VectorXd u = b + step * x.transpose() * r / nobs;
-        Eigen::VectorXd v = u.cwiseAbs() - step * al * gamma * pf;
+        u = b + step * x.transpose() * r / nobs;
+        v = u.cwiseAbs() - step * al * gamma * pf;
         v = v.cwiseMax(Eigen::VectorXd::Zero(v.size()));
         b = v.array() * u.array().sign();
 
@@ -46,9 +46,14 @@ Rcpp::List prox_sgl(
 
         //#!--------- CHECK CONVERGENCE ----------#!
         if (maxg < peps) break;
+        iters++;
     }
+
+    Rcpp::Rcout << iters << std::endl;
+
     Rcpp::List result;
     result["b"] = b;
     result["r"] = r;
+
     return result;
 }
